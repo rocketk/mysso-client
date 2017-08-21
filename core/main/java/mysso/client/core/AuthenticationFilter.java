@@ -19,11 +19,11 @@ public class AuthenticationFilter implements Filter{
         this.spid = filterConfig.getInitParameter("spid");
         this.spkey = filterConfig.getInitParameter("spkey");
         String customTokenName = filterConfig.getInitParameter("tokenName");
-        if (customTokenName != null) {
+        if (customTokenName != null && !customTokenName.equals("")) {
             this.tokenName = customTokenName;
         }
         String customPrincipalName = filterConfig.getInitParameter("principalName");
-        if (customPrincipalName != null) {
+        if (customPrincipalName != null && !customPrincipalName.equals("")) {
             this.principalName = customPrincipalName;
         }
     }
