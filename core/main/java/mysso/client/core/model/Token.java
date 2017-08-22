@@ -8,5 +8,5 @@ import java.io.Serializable;
 public class Token implements Serializable{
     private String id;
     private long expiredTime;
-
+    private Principal principal;
 }
