@@ -5,17 +5,17 @@ import java.io.Serializable;
 /**
  * Created by pengyu on 2017/8/21.
  */
-public class Token implements Serializable{
-    private String id;
+public class Authentication implements Serializable {
+    private String token;
     private long expiredTime;
     private Principal principal;
 
-    public String getId() {
-        return id;
+    public String getToken() {
+        return token;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public long getExpiredTime() {

@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>mysso</groupId>
-    <artifactId>webapp-demo</artifactId>
+    <artifactId>client-webapp-demo</artifactId>
     <version>${project.parent.version}</version>
     <packaging>war</packaging>
     
