@@ -2,6 +2,7 @@ package mysso.client.core.validator;
 
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,22 +56,28 @@ public class HttpValidatorImpl implements Validator {
             response = httpclient.execute(httpPost);
             System.out.println(response.getStatusLine());
             log.trace("response validate-st response, status: {}", response.getStatusLine().getStatusCode());
-            HttpEntity entity2 = response.getEntity();
+            HttpEntity entity = response.getEntity();
             // do something useful with the response body
             // and ensure it is fully consumed
-            EntityUtils.consume(entity2);
+            InputStream contentStream = entity.getContent();
+            String content = IOUtils.toString(contentStream, "UTF-8");
+            System.out.println(content);
+            EntityUtils.consume(entity);
         } catch (UnsupportedEncodingException e) {
+            log.error(e.getMessage(), e);
             e.printStackTrace();
         } catch (ClientProtocolException e) {
+            log.error(e.getMessage(), e);
             e.printStackTrace();
         } catch (IOException e) {
+            log.error(e.getMessage(), e);
             e.printStackTrace();
         } finally {
             if (response != null) {
                 try {
                     response.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(), e);
                 }
             }
         }
