@@ -104,9 +104,9 @@ public class AuthenticationFilter implements Filter {
         if (session != null) {
             Object assertionNameObj = session.getAttribute(assertionName);
             if (assertionNameObj != null) {
-                AssertionDto assertionDto = (AssertionDto) assertionNameObj;
-                if (assertionDto != null && assertionDto.getPrincipal() != null) {
-                    principalId = assertionDto.getPrincipal().getId();
+                Assertion assertion = (Assertion) assertionNameObj;
+                if (assertion != null && assertion.getPrincipal() != null) {
+                    principalId = assertion.getPrincipal().getId();
                 }
             }
             session.invalidate();
