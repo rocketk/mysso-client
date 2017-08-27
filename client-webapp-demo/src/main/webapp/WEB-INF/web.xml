@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+    <display-name>mysso-server</display-name>
+
+    <context-param>
+        <param-name>isLog4jAutoInitializationDisabled</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    
+    <filter>
+        <filter-name>MyssoFilter</filter-name>
+        <filter-class>mysso.client.core.AuthenticationFilter</filter-class>
+        <init-param>
+            <param-name>authenticationUrl</param-name>
+            <param-value>http://localhost:8080/mysso/login</param-value>
+        </init-param>
+        <init-param>
+            <param-name>validationUrlPrefix</param-name>
+            <param-value>http://localhost:8080/mysso</param-value>
+        </init-param>
+        <init-param>
+            <param-name>spid</param-name>
+            <param-value>sp-859f3de832604305b5c035713561f4b9</param-value>
+        </init-param>
+        <init-param>
+            <param-name>spkey</param-name>
+            <param-value>anyRandomSecretKey</param-value>
+        </init-param>
+        <init-param>
+            <param-name>useHttps</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>localLogoutUri</param-name>
+            <param-value>/logout</param-value>
+        </init-param>
+        <init-param>
+            <param-name>serverLogoutUrl</param-name>
+            <param-value>http://localhost:8080/mysso/logout</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>MyssoFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+    <session-config>
+        <!-- Default to 5 minute session timeouts -->
+        <session-timeout>5</session-timeout>
+        <tracking-mode>COOKIE</tracking-mode>
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+</web-app>

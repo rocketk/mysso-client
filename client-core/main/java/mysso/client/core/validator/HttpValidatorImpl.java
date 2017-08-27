@@ -1,11 +1,11 @@
 package mysso.client.core.validator;
 
+import mysso.client.core.util.FastJsonUtil;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +29,7 @@ public class HttpValidatorImpl implements Validator {
     private String spid;
     private String spkey;
     private String validationUrlPrefix;
+    private CloseableHttpClient httpclient = HttpClients.createDefault();
 
     public HttpValidatorImpl() {
     }
@@ -42,35 +42,38 @@ public class HttpValidatorImpl implements Validator {
 
     @Override
     public AssertionDto validateServiceTicket(String st) {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
+        return validateTicket(st, Constants.PARAM_SERVICE_TICKET, validationUrlPrefix + Constants.VALIDATE_ST_URI);
+    }
+
+    @Override
+    public AssertionDto validateToken(String tk) {
+        return validateTicket(tk, Constants.PARAM_TOKEN, validationUrlPrefix + Constants.VALIDATE_TK_URI);
+    }
+
+    private AssertionDto validateTicket(String ticket, String paramName, String validateUrl) {
         CloseableHttpResponse response = null;
         try {
-            HttpPost httpPost = new HttpPost(validationUrlPrefix + Constants.VALIDATE_ST_URI);
+            HttpPost httpPost = new HttpPost(validateUrl);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
             nvps.add(new BasicNameValuePair(Constants.PARAM_SPID, spid));
             nvps.add(new BasicNameValuePair(Constants.PARAM_SPKEY, spkey));
-            nvps.add(new BasicNameValuePair(Constants.PARAM_SERVICE_TICKET, st));
+            nvps.add(new BasicNameValuePair(paramName, ticket));
             httpPost.setEntity(new UrlEncodedFormEntity(nvps));
-            log.trace("sending validate-st request to mysso-server, url: {}, st: {}, spid: {}",
-                    validationUrlPrefix + Constants.VALIDATE_ST_URI, st, spid);
+            log.trace("sending ticket validation request to mysso-server, url: {}, ticket: {}, spid: {}, validateUrl: {}",
+                    validationUrlPrefix + Constants.VALIDATE_ST_URI, ticket, spid, validateUrl);
             response = httpclient.execute(httpPost);
-            System.out.println(response.getStatusLine());
-            log.trace("response validate-st response, status: {}", response.getStatusLine().getStatusCode());
+            log.trace("received ticket validation response, status: {}", response.getStatusLine().getStatusCode());
             HttpEntity entity = response.getEntity();
-            // do something useful with the response body
-            // and ensure it is fully consumed
             InputStream contentStream = entity.getContent();
+            log.trace("reading input stream of response to a string");
             String content = IOUtils.toString(contentStream, "UTF-8");
-            System.out.println(content);
+            log.trace("response content: " + content);
+            log.trace("parsing the string content to AssertionDto object");
+            AssertionDto assertionDto = FastJsonUtil.parseAssertionDto(content);
             EntityUtils.consume(entity);
-        } catch (UnsupportedEncodingException e) {
-            log.error(e.getMessage(), e);
-            e.printStackTrace();
-        } catch (ClientProtocolException e) {
-            log.error(e.getMessage(), e);
-            e.printStackTrace();
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            return assertionDto;
+        } catch (Exception e) {
+            log.error("an exception occurred when sending validation request, caused by: " + e.getMessage(), e);
             e.printStackTrace();
         } finally {
             if (response != null) {
@@ -82,11 +85,6 @@ public class HttpValidatorImpl implements Validator {
             }
         }
 
-        return null;
-    }
-
-    @Override
-    public AssertionDto validateToken(String tk) {
         return null;
     }
 

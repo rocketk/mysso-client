@@ -5,10 +5,19 @@ import java.io.Serializable;
 /**
  * Created by pengyu on 2017/8/21.
  */
-public class Authentication implements Serializable {
+public class Assertion implements Serializable {
     private String token;
     private long expiredTime;
     private Principal principal;
+
+    public Assertion() {
+    }
+
+    public Assertion(String token, long expiredTime, Principal principal) {
+        this.token = token;
+        this.expiredTime = expiredTime;
+        this.principal = principal;
+    }
 
     public String getToken() {
         return token;

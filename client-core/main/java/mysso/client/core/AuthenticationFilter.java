@@ -1,11 +1,15 @@
 package mysso.client.core;
 
-import mysso.client.core.model.Authentication;
+import mysso.client.core.model.Assertion;
+import mysso.client.core.model.Principal;
+import mysso.client.core.util.PageUtil;
 import mysso.client.core.validator.HttpValidatorImpl;
 import mysso.client.core.validator.HttpsValidatorImpl;
 import mysso.client.core.validator.Validator;
 import mysso.protocol1.Constants;
-import org.apache.commons.lang3.StringUtils;
+import mysso.protocol1.dto.AssertionDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -17,13 +21,19 @@ import java.io.IOException;
  * Created by pengyu on 17-8-20.
  */
 public class AuthenticationFilter implements Filter {
+    private Logger log = LoggerFactory.getLogger(getClass());
+    public static final String assertionName = "_mysso_assertion";
     private String authenticationUrl;
     private String validationUrlPrefix;
     private String spid;
     private String spkey;
     private boolean useHttps;
-    private String assertionName = "_mysso_assertion";
+    private String localLogoutUri;
+    private String serverLogoutUrl;
+
     private Validator validator;
+
+    private String authenticationUrlWithSpid;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -32,42 +42,106 @@ public class AuthenticationFilter implements Filter {
         this.validationUrlPrefix = removeSlash(this.validationUrlPrefix);
         this.spid = filterConfig.getInitParameter("spid");
         this.spkey = filterConfig.getInitParameter("spkey");
-        String customTokenName = filterConfig.getInitParameter("assertionName");
-        if (customTokenName != null && !customTokenName.equals("")) {
-            this.assertionName = customTokenName;
-        }
+        this.localLogoutUri = filterConfig.getInitParameter("localLogoutUri");
+        this.serverLogoutUrl = filterConfig.getInitParameter("serverLogoutUrl");
         String useHttps = filterConfig.getInitParameter("useHttps");
-        if (useHttps != null || "true".equals(useHttps) || "1".equals(useHttps)) {
+        if (useHttps != null && ("true".equals(useHttps) || "1".equals(useHttps))) {
             this.useHttps = true;
             validator = new HttpsValidatorImpl(); // todo
         } else {
             this.useHttps = false;
             validator = new HttpValidatorImpl(spid, spkey, validationUrlPrefix);
         }
+        this.authenticationUrlWithSpid = authenticationUrl + "?" + Constants.PARAM_SPID + "=" + spid;
     }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        // check token in session
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
+        // check logout request
+        if (request.getServletPath().equals(localLogoutUri)) {
+            handleLogout(request, response);
+            return;
+        }
+        // check token in session
         HttpSession session = request.getSession(false);
+        // 检查 session 中的token, 从而判断是否登录
         if (session != null && session.getAttribute(assertionName) != null) {
-            Authentication authentication = (Authentication) session.getAttribute(assertionName);
-            if (System.currentTimeMillis() < authentication.getExpiredTime()) {
-                // valid token
+            Assertion assertion = (Assertion) session.getAttribute(assertionName);
+            if (System.currentTimeMillis() < assertion.getExpiredTime()) {
+                // token 正常
+                log.info("user has been authenticated, principalId: {}, url: {}",
+                        assertion.getPrincipal().getId(), request.getServletPath());
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
-                // todo valid but expired, send a authentication-validation request to mysso-server
+                // token 正常但过时了, 发送校验请求
+                log.info("token is valid but expired, principalId: {}, url: {}",
+                        assertion.getPrincipal().getId(), request.getServletPath());
+                AssertionDto assertionDto = validator.validateToken(assertion.getToken());
+                handleAssertionDto(request, response, filterChain, assertionDto);
+                return;
             }
         } else {
-            // no token, check st(service ticket)
+            // 没有 token , 表示没有登录, 检查 service ticket
             String st = request.getParameter(Constants.PARAM_SERVICE_TICKET);
             if (st != null && !st.isEmpty()) {
-                // todo send a st-validation request to mysso-server
+                // 发送校验请求
+                AssertionDto assertionDto = validator.validateServiceTicket(st);
+                handleAssertionDto(request, response, filterChain, assertionDto);
+                return;
             } else {
-                // todo redirect to mysso-server
+                // redirect to mysso-server
+                response.sendRedirect(authenticationUrlWithSpid);
+                return;
             }
+        }
+    }
+
+    private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession(false);
+        String principalId = null;
+        if (session != null) {
+            Object assertionNameObj = session.getAttribute(assertionName);
+            if (assertionNameObj != null) {
+                AssertionDto assertionDto = (AssertionDto) assertionNameObj;
+                if (assertionDto != null && assertionDto.getPrincipal() != null) {
+                    principalId = assertionDto.getPrincipal().getId();
+                }
+            }
+            session.invalidate();
+        }
+        log.info("handle logout, principal.id: {}", principalId);
+    }
+
+    private void handleAssertionDto(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+                                    AssertionDto assertionDto) throws IOException, ServletException {
+        if (assertionDto != null && assertionDto.getCode() == 200) {
+            // 校验成功
+            Principal principal = new Principal(assertionDto.getPrincipal().getId(),
+                    assertionDto.getPrincipal().getAttributes());
+            Assertion assertion = new Assertion(assertionDto.getToken(),
+                    assertionDto.getExpiredTime(), principal);
+            request.getSession().setAttribute(assertionName, assertion);
+            chain.doFilter(request, response);
+            return;
+        } else if(assertionDto != null) {
+            // 校验失败
+            response.setContentType("text/html;charset=UTF-8");
+            response.setHeader("Content-Type", "text/html;charset=UTF-8");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(PageUtil.warnPage(
+                    "校验ticket失败", assertionDto.getMessage(), authenticationUrlWithSpid));
+            response.flushBuffer();
+            return;
+        } else {
+            // 校验出错
+            response.setContentType("text/html;charset=UTF-8");
+            response.setHeader("Content-Type", "text/html;charset=UTF-8");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(PageUtil.warnPage(
+                    "校验ticket出错", "未知错误, 请联系管理员", authenticationUrlWithSpid));
+            return;
         }
     }
 
@@ -85,4 +159,67 @@ public class AuthenticationFilter implements Filter {
         return uri;
     }
 
+    public String getAuthenticationUrl() {
+        return authenticationUrl;
+    }
+
+    public void setAuthenticationUrl(String authenticationUrl) {
+        this.authenticationUrl = authenticationUrl;
+    }
+
+    public String getValidationUrlPrefix() {
+        return validationUrlPrefix;
+    }
+
+    public void setValidationUrlPrefix(String validationUrlPrefix) {
+        this.validationUrlPrefix = validationUrlPrefix;
+    }
+
+    public String getSpid() {
+        return spid;
+    }
+
+    public void setSpid(String spid) {
+        this.spid = spid;
+    }
+
+    public String getSpkey() {
+        return spkey;
+    }
+
+    public void setSpkey(String spkey) {
+        this.spkey = spkey;
+    }
+
+    public boolean isUseHttps() {
+        return useHttps;
+    }
+
+    public void setUseHttps(boolean useHttps) {
+        this.useHttps = useHttps;
+    }
+
+    public String getLocalLogoutUri() {
+        return localLogoutUri;
+    }
+
+    public void setLocalLogoutUri(String localLogoutUri) {
+        this.localLogoutUri = localLogoutUri;
+    }
+
+    public Validator getValidator() {
+        return validator;
+    }
+
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
+
+    public String getServerLogoutUrl() {
+        return serverLogoutUrl;
+    }
+
+    public void setServerLogoutUrl(String serverLogoutUrl) {
+        this.serverLogoutUrl = serverLogoutUrl;
+    }
 }
