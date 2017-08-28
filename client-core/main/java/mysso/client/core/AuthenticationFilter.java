@@ -1,5 +1,6 @@
 package mysso.client.core;
 
+import com.alibaba.fastjson.JSON;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.model.Principal;
 import mysso.client.core.util.PageUtil;
@@ -8,6 +9,8 @@ import mysso.client.core.validator.HttpsValidatorImpl;
 import mysso.client.core.validator.Validator;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
+import mysso.protocol1.dto.LogoutResultDto;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,19 +102,42 @@ public class AuthenticationFilter implements Filter {
     }
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        HttpSession session = request.getSession(false);
-        String principalId = null;
-        if (session != null) {
-            Object assertionNameObj = session.getAttribute(assertionName);
-            if (assertionNameObj != null) {
-                Assertion assertion = (Assertion) assertionNameObj;
-                if (assertion != null && assertion.getPrincipal() != null) {
-                    principalId = assertion.getPrincipal().getId();
-                }
-            }
-            session.invalidate();
+        LogoutResultDto logoutResultDto = new LogoutResultDto();
+        String tk = request.getParameter(Constants.SLO_PARAM_TOKEN);
+        if (StringUtils.isEmpty(tk)) {
+            logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_EMPTY);
+            logoutResultDto.setMessage("token is null or empty");
+            renderJson(response, JSON.toJSONString(logoutResultDto));
+            return;
         }
-        log.info("handle logout, principal.id: {}", principalId);
+        try{
+            HttpSession session = request.getSession(false);
+            String principalId = null;
+            if (session != null) {
+                Object assertionNameObj = session.getAttribute(assertionName);
+                if (assertionNameObj != null) {
+                    Assertion assertion = (Assertion) assertionNameObj;
+                    if (assertion != null && assertion.getPrincipal() != null) {
+                        principalId = assertion.getPrincipal().getId();
+                    }
+                }
+                session.invalidate();
+            }
+            if (principalId != null) {
+                logoutResultDto.setCode(Constants.SLO_CODE_SUCCESS);
+                logoutResultDto.setMessage("handled logout request successfully");
+                log.info("handled logout request, principal.id: {}", principalId);
+            } else {
+                logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_NONEXISTS);
+                logoutResultDto.setMessage("handled logout request successfully");
+                log.info("handled logout request, there is no principal, the token {} does not exists", tk);
+            }
+            renderJson(response, JSON.toJSONString(logoutResultDto));
+        } catch (Exception e) {
+            logoutResultDto.setCode(Constants.SLO_CODE_ERROR);
+            logoutResultDto.setMessage("an exception occurred when handling logout request");
+            renderJson(response, JSON.toJSONString(logoutResultDto));
+        }
     }
 
     private void handleAssertionDto(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
@@ -127,22 +153,29 @@ public class AuthenticationFilter implements Filter {
             return;
         } else if(assertionDto != null) {
             // 校验失败
-            response.setContentType("text/html;charset=UTF-8");
-            response.setHeader("Content-Type", "text/html;charset=UTF-8");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(PageUtil.warnPage(
+            renderHtml(response, PageUtil.warnPage(
                     "校验ticket失败", assertionDto.getMessage(), authenticationUrlWithSpid));
-            response.flushBuffer();
             return;
         } else {
             // 校验出错
-            response.setContentType("text/html;charset=UTF-8");
-            response.setHeader("Content-Type", "text/html;charset=UTF-8");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(PageUtil.warnPage(
-                    "校验ticket出错", "未知错误, 请联系管理员", authenticationUrlWithSpid));
+            renderHtml(response, PageUtil.warnPage("校验ticket出错", "未知错误, 请联系管理员", authenticationUrlWithSpid));
             return;
         }
+    }
+
+    private void render(HttpServletResponse response, String content, String contentType) throws IOException {
+        response.setContentType(contentType);
+        response.setHeader("Content-Type", contentType);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(content);
+        response.flushBuffer();
+    }
+
+    private void renderJson(HttpServletResponse response, String content) throws IOException {
+        render(response, content, "application/json;charset=UTF-8");
+    }
+    private void renderHtml(HttpServletResponse response, String content) throws IOException {
+        render(response, content, "text/html;charset=UTF-8");
     }
 
     @Override

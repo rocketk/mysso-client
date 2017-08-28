@@ -1,6 +1,6 @@
 package mysso.client.core.validator;
 
-import mysso.client.core.util.FastJsonUtil;
+import com.alibaba.fastjson.JSON;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
 import org.apache.commons.io.IOUtils;
@@ -69,7 +69,7 @@ public class HttpValidatorImpl implements Validator {
             String content = IOUtils.toString(contentStream, "UTF-8");
             log.trace("response content: " + content);
             log.trace("parsing the string content to AssertionDto object");
-            AssertionDto assertionDto = FastJsonUtil.parseAssertionDto(content);
+            AssertionDto assertionDto = JSON.parseObject(content, AssertionDto.class);
             EntityUtils.consume(entity);
             return assertionDto;
         } catch (Exception e) {

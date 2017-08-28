@@ -1,5 +1,6 @@
 package mysso.client.core.util;
 
+import com.alibaba.fastjson.JSON;
 import mysso.protocol1.dto.AssertionDto;
 import mysso.protocol1.dto.PrincipalDto;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class FastJsonUtilTest {
                 "    'token': 'tk-641d57fee8c0432498bdbf11d5c92d8e'\n" +
                 "}";
         try {
-            AssertionDto assertionDto = FastJsonUtil.parseAssertionDto(content);
+            AssertionDto assertionDto = JSON.parseObject(content, AssertionDto.class);
             assertEquals(200, assertionDto.getCode());
             assertEquals(1503825358251L, assertionDto.getExpiredTime());
             assertEquals("tk-641d57fee8c0432498bdbf11d5c92d8e", assertionDto.getToken());
@@ -46,4 +47,5 @@ public class FastJsonUtilTest {
             e.printStackTrace();
         }
     }
+
 }
