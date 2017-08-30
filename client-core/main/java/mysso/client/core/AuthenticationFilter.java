@@ -103,6 +103,7 @@ public class AuthenticationFilter implements Filter {
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         LogoutResultDto logoutResultDto = new LogoutResultDto();
+        // todo 判断前端登出还是后端登出，如果是后端登出，要从SessionRegistry中取得session
         String tk = request.getParameter(Constants.SLO_PARAM_TOKEN);
         if (StringUtils.isEmpty(tk)) {
             logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_EMPTY);
@@ -110,6 +111,7 @@ public class AuthenticationFilter implements Filter {
             renderJson(response, JSON.toJSONString(logoutResultDto));
             return;
         }
+        // 前端登出
         try{
             HttpSession session = request.getSession(false);
             String principalId = null;
