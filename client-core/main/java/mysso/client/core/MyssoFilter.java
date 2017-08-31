@@ -3,6 +3,7 @@ package mysso.client.core;
 import com.alibaba.fastjson.JSON;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.model.Principal;
+import mysso.client.core.util.ConfigUtil;
 import mysso.client.core.util.PageUtil;
 import mysso.client.core.validator.HttpValidatorImpl;
 import mysso.client.core.validator.HttpsValidatorImpl;
@@ -23,9 +24,10 @@ import java.io.IOException;
 /**
  * Created by pengyu on 17-8-20.
  */
-public class AuthenticationFilter implements Filter {
-    private Logger log = LoggerFactory.getLogger(getClass());
-    public static final String assertionName = "_mysso_assertion";
+public class MyssoFilter implements Filter {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private ConfigUtil configUtil;
+    private static String assertionName;
     private String authenticationUrl;
     private String validationUrlPrefix;
     private String spid;
@@ -40,14 +42,18 @@ public class AuthenticationFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.authenticationUrl = filterConfig.getInitParameter("authenticationUrl");
-        this.validationUrlPrefix = filterConfig.getInitParameter("validationUrlPrefix");
+        String configFile = filterConfig.getInitParameter("configFile");
+        log.info("loading configFile from {}", configFile);
+        configUtil = ConfigUtil.getInstance(configFile);
+        assertionName = configUtil.getProperty("assertionName", "_mysso_authentication");
+        this.authenticationUrl = configUtil.getProperty("authenticationUrl");
+        this.validationUrlPrefix = configUtil.getProperty("validationUrlPrefix");
         this.validationUrlPrefix = removeSlash(this.validationUrlPrefix);
-        this.spid = filterConfig.getInitParameter("spid");
-        this.spkey = filterConfig.getInitParameter("spkey");
-        this.localLogoutUri = filterConfig.getInitParameter("localLogoutUri");
-        this.serverLogoutUrl = filterConfig.getInitParameter("serverLogoutUrl");
-        String useHttps = filterConfig.getInitParameter("useHttps");
+        this.spid = configUtil.getProperty("spid");
+        this.spkey = configUtil.getProperty("spkey");
+        this.localLogoutUri = configUtil.getProperty("localLogoutUri");
+        this.serverLogoutUrl = configUtil.getProperty("serverLogoutUrl");
+        String useHttps = configUtil.getProperty("useHttps");
         if (useHttps != null && ("true".equals(useHttps) || "1".equals(useHttps))) {
             this.useHttps = true;
             validator = new HttpsValidatorImpl(); // todo
@@ -256,5 +262,9 @@ public class AuthenticationFilter implements Filter {
 
     public void setServerLogoutUrl(String serverLogoutUrl) {
         this.serverLogoutUrl = serverLogoutUrl;
+    }
+
+    public static String getAssertionName() {
+        return assertionName;
     }
 }
