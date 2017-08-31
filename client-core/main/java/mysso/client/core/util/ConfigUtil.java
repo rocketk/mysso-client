@@ -15,13 +15,13 @@ public class ConfigUtil {
     private final Properties properties = new Properties();
     private static ConfigUtil instance;
 
-    private static final String DEFAULT_CONFIG_FILE = "myssoclient.properties";
+    private static final String DEFAULT_CONFIG_FILE = "/myssoclient.properties";
 
     private ConfigUtil(String configFile) {
         this.configFile = configFile;
         log.info("loading configFile from {}", configFile);
         try {
-            instance.properties.load(instance.getClass().getResourceAsStream(configFile));
+            this.properties.load(this.getClass().getResourceAsStream(configFile));
         } catch (IOException e) {
             log.error("an exception occurred when reading config file, caused by: " + e.getMessage(), e.getCause());
             throw new RuntimeException(e);

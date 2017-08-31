@@ -7,7 +7,7 @@
     <title>protected page</title>
 </head>
 <body>
-<c:set var="assertion" value="<%=request.getSession().getAttribute(ConfigUtil.getInstance().getProperty(MyssoFilter.getAssertionName()))%>"/>
+<c:set var="assertion" value="<%=request.getSession().getAttribute(MyssoFilter.getAssertionName())%>"/>
 <h1>hello, this is a demo client for mysso</h1>
 <p><a href="http://localhost:8080/mysso/logout">退出</a> </p>
 <p>principal</p>

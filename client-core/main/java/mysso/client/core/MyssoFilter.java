@@ -45,7 +45,7 @@ public class MyssoFilter implements Filter {
         String configFile = filterConfig.getInitParameter("configFile");
         log.info("loading configFile from {}", configFile);
         configUtil = ConfigUtil.getInstance(configFile);
-        assertionName = configUtil.getProperty("assertionName", "_mysso_authentication");
+        assertionName = configUtil.getProperty("assertionName", "_mysso_assertion");
         this.authenticationUrl = configUtil.getProperty("authenticationUrl");
         this.validationUrlPrefix = configUtil.getProperty("validationUrlPrefix");
         this.validationUrlPrefix = removeSlash(this.validationUrlPrefix);
