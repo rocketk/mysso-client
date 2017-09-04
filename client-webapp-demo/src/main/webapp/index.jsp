@@ -1,5 +1,6 @@
 <%@ page import="mysso.client.core.MyssoFilter" %>
 <%@ page import="mysso.client.core.util.ConfigUtil" %>
+<%@ page import="mysso.client.core.util.Configuration" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
@@ -7,7 +8,7 @@
     <title>protected page</title>
 </head>
 <body>
-<c:set var="assertion" value="<%=request.getSession().getAttribute(MyssoFilter.getAssertionName())%>"/>
+<c:set var="assertion" value="<%=request.getSession().getAttribute(Configuration.getInstance().assertionName)%>"/>
 <h1>hello, this is a demo client for mysso</h1>
 <p><a href="http://localhost:8080/mysso/logout">退出</a> </p>
 <p>principal</p>

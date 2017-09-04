@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.model.Principal;
 import mysso.client.core.util.ConfigUtil;
+import mysso.client.core.util.Configuration;
 import mysso.client.core.util.PageUtil;
 import mysso.client.core.validator.HttpValidatorImpl;
 import mysso.client.core.validator.HttpsValidatorImpl;
@@ -26,15 +27,10 @@ import java.io.IOException;
  */
 public class MyssoFilter implements Filter {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private ConfigUtil configUtil;
-    private static String assertionName;
-    private String authenticationUrl;
-    private String validationUrlPrefix;
-    private String spid;
-    private String spkey;
-    private boolean useHttps;
-    private String localLogoutUri;
-    private String serverLogoutUrl;
+
+    public ConfigUtil configUtil;
+
+    private Configuration cfg;
 
     private Validator validator;
 
@@ -44,24 +40,25 @@ public class MyssoFilter implements Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
         String configFile = filterConfig.getInitParameter("configFile");
         log.info("loading configFile from {}", configFile);
-        configUtil = ConfigUtil.getInstance(configFile);
-        assertionName = configUtil.getProperty("assertionName", "_mysso_assertion");
-        this.authenticationUrl = configUtil.getProperty("authenticationUrl");
-        this.validationUrlPrefix = configUtil.getProperty("validationUrlPrefix");
-        this.validationUrlPrefix = removeSlash(this.validationUrlPrefix);
-        this.spid = configUtil.getProperty("spid");
-        this.spkey = configUtil.getProperty("spkey");
-        this.localLogoutUri = configUtil.getProperty("localLogoutUri");
-        this.serverLogoutUrl = configUtil.getProperty("serverLogoutUrl");
+        this.configUtil = ConfigUtil.getInstance(configFile);
+        cfg = Configuration.getInstance();
+        cfg.assertionName = configUtil.getProperty("assertionName", "_mysso_assertion");
+        cfg.authenticationUrl = configUtil.getProperty("authenticationUrl");
+        cfg.validationUrlPrefix = configUtil.getProperty("validationUrlPrefix");
+        cfg.validationUrlPrefix = removeSlash(cfg.validationUrlPrefix);
+        cfg.spid = configUtil.getProperty("spid");
+        cfg.spkey = configUtil.getProperty("spkey");
+        cfg.localLogoutUri = configUtil.getProperty("localLogoutUri");
+        cfg.serverLogoutUrl = configUtil.getProperty("serverLogoutUrl");
         String useHttps = configUtil.getProperty("useHttps");
         if (useHttps != null && ("true".equals(useHttps) || "1".equals(useHttps))) {
-            this.useHttps = true;
+            cfg.useHttps = true;
             validator = new HttpsValidatorImpl(); // todo
         } else {
-            this.useHttps = false;
-            validator = new HttpValidatorImpl(spid, spkey, validationUrlPrefix);
+            cfg.useHttps = false;
+            validator = new HttpValidatorImpl(cfg.spid, cfg.spkey, cfg.validationUrlPrefix);
         }
-        this.authenticationUrlWithSpid = authenticationUrl + "?" + Constants.PARAM_SPID + "=" + spid;
+        this.authenticationUrlWithSpid = cfg.authenticationUrl + "?" + Constants.PARAM_SPID + "=" + cfg.spid;
     }
 
     @Override
@@ -69,15 +66,15 @@ public class MyssoFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         // check logout request
-        if (request.getServletPath().equals(localLogoutUri)) {
+        if (request.getServletPath().equals(cfg.localLogoutUri)) {
             handleLogout(request, response);
             return;
         }
         // check token in session
         HttpSession session = request.getSession(false);
         // 检查 session 中的token, 从而判断是否登录
-        if (session != null && session.getAttribute(assertionName) != null) {
-            Assertion assertion = (Assertion) session.getAttribute(assertionName);
+        if (session != null && session.getAttribute(cfg.assertionName) != null) {
+            Assertion assertion = (Assertion) session.getAttribute(cfg.assertionName);
             if (System.currentTimeMillis() < assertion.getExpiredTime()) {
                 // token 正常
                 log.info("user has been authenticated, principalId: {}, url: {}",
@@ -122,7 +119,7 @@ public class MyssoFilter implements Filter {
             HttpSession session = request.getSession(false);
             String principalId = null;
             if (session != null) {
-                Object assertionNameObj = session.getAttribute(assertionName);
+                Object assertionNameObj = session.getAttribute(cfg.assertionName);
                 if (assertionNameObj != null) {
                     Assertion assertion = (Assertion) assertionNameObj;
                     if (assertion != null && assertion.getPrincipal() != null) {
@@ -156,7 +153,7 @@ public class MyssoFilter implements Filter {
                     assertionDto.getPrincipal().getAttributes());
             Assertion assertion = new Assertion(assertionDto.getToken(),
                     assertionDto.getExpiredTime(), principal);
-            request.getSession().setAttribute(assertionName, assertion);
+            request.getSession().setAttribute(cfg.assertionName, assertion);
             chain.doFilter(request, response);
             return;
         } else if(assertionDto != null) {
@@ -198,73 +195,5 @@ public class MyssoFilter implements Filter {
             }
         }
         return uri;
-    }
-
-    public String getAuthenticationUrl() {
-        return authenticationUrl;
-    }
-
-    public void setAuthenticationUrl(String authenticationUrl) {
-        this.authenticationUrl = authenticationUrl;
-    }
-
-    public String getValidationUrlPrefix() {
-        return validationUrlPrefix;
-    }
-
-    public void setValidationUrlPrefix(String validationUrlPrefix) {
-        this.validationUrlPrefix = validationUrlPrefix;
-    }
-
-    public String getSpid() {
-        return spid;
-    }
-
-    public void setSpid(String spid) {
-        this.spid = spid;
-    }
-
-    public String getSpkey() {
-        return spkey;
-    }
-
-    public void setSpkey(String spkey) {
-        this.spkey = spkey;
-    }
-
-    public boolean isUseHttps() {
-        return useHttps;
-    }
-
-    public void setUseHttps(boolean useHttps) {
-        this.useHttps = useHttps;
-    }
-
-    public String getLocalLogoutUri() {
-        return localLogoutUri;
-    }
-
-    public void setLocalLogoutUri(String localLogoutUri) {
-        this.localLogoutUri = localLogoutUri;
-    }
-
-    public Validator getValidator() {
-        return validator;
-    }
-
-    public void setValidator(Validator validator) {
-        this.validator = validator;
-    }
-
-    public String getServerLogoutUrl() {
-        return serverLogoutUrl;
-    }
-
-    public void setServerLogoutUrl(String serverLogoutUrl) {
-        this.serverLogoutUrl = serverLogoutUrl;
-    }
-
-    public static String getAssertionName() {
-        return assertionName;
     }
 }
