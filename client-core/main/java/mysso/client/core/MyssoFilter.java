@@ -48,7 +48,8 @@ public class MyssoFilter implements Filter {
         cfg.validationUrlPrefix = removeSlash(cfg.validationUrlPrefix);
         cfg.spid = configUtil.getProperty("spid");
         cfg.spkey = configUtil.getProperty("spkey");
-        cfg.localLogoutUri = configUtil.getProperty("localLogoutUri");
+        cfg.backChannelLogoutUri = configUtil.getProperty("backChannelLogoutUri");
+        cfg.frontChannelLogoutUri = configUtil.getProperty("frontChannelLogoutUri");
         cfg.serverLogoutUrl = configUtil.getProperty("serverLogoutUrl");
         String useHttps = configUtil.getProperty("useHttps");
         if (useHttps != null && ("true".equals(useHttps) || "1".equals(useHttps))) {
@@ -66,7 +67,7 @@ public class MyssoFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         // check logout request
-        if (request.getServletPath().equals(cfg.localLogoutUri)) {
+        if (request.getServletPath().equals(cfg.backChannelLogoutUri)) {
             handleLogout(request, response);
             return;
         }

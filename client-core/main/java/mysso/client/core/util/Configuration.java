@@ -11,7 +11,8 @@ public class Configuration {
     public String spid;
     public String spkey;
     public boolean useHttps;
-    public String localLogoutUri;
+    public String backChannelLogoutUri;
+    public String frontChannelLogoutUri;
     public String serverLogoutUrl;
 
     private Configuration() {
