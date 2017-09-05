@@ -14,6 +14,7 @@ public class Configuration {
     public String backChannelLogoutUri;
     public String frontChannelLogoutUri;
     public String serverLogoutUrl;
+    public int sessionRegistryClass;
 
     private Configuration() {
 

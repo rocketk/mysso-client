@@ -1,5 +1,8 @@
 package mysso.client.core.util;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 /**
  * Created by pengyu on 2017/8/27.
  */
@@ -18,5 +21,21 @@ public class PageUtil {
         page.append("</body>").append("\n");
         page.append("</html>").append("\n");
         return page.toString();
+    }
+
+
+    public static void render(HttpServletResponse response, String content, String contentType) throws IOException {
+        response.setContentType(contentType);
+        response.setHeader("Content-Type", contentType);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(content);
+        response.flushBuffer();
+    }
+
+    public static void renderJson(HttpServletResponse response, String content) throws IOException {
+        render(response, content, "application/json;charset=UTF-8");
+    }
+    public static void renderHtml(HttpServletResponse response, String content) throws IOException {
+        render(response, content, "text/html;charset=UTF-8");
     }
 }
