@@ -19,4 +19,9 @@ public class InMemorySessionRegistry implements SessionRegistry {
         return sessionMapByTokenId.get(tokenId);
     }
 
+    @Override
+    public HttpSession removeSessionByTokenId(String tokenId) {
+        return sessionMapByTokenId.remove(tokenId);
+    }
+
 }

@@ -1,4 +1,4 @@
-package mysso.client.core.util;
+package mysso.client.core.context;
 
 /**
  * Created by pengyu on 2017/9/4.
@@ -14,7 +14,7 @@ public class Configuration {
     public String backChannelLogoutUri;
     public String frontChannelLogoutUri;
     public String serverLogoutUrl;
-    public int sessionRegistryClass;
+    public String authenticationUrlWithSpid;
 
     private Configuration() {
 

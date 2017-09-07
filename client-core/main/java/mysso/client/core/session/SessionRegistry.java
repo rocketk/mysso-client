@@ -8,4 +8,6 @@ import javax.servlet.http.HttpSession;
 public interface SessionRegistry {
     void putSessionByTokenId(String tokenId, HttpSession session);
     HttpSession getSessionByTokenId(String tokenId);
+
+    HttpSession removeSessionByTokenId(String tokenId);
 }

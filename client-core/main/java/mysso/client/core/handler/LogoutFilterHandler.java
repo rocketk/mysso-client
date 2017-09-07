@@ -1,8 +1,9 @@
 package mysso.client.core.handler;
 
 import com.alibaba.fastjson.JSON;
+import mysso.client.core.context.Configuration;
 import mysso.client.core.model.Assertion;
-import mysso.client.core.util.Configuration;
+import mysso.client.core.session.SessionRegistry;
 import mysso.client.core.util.PageUtil;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.LogoutResultDto;
@@ -21,6 +22,7 @@ import java.io.IOException;
 public class LogoutFilterHandler implements FilterHandler {
     private Logger log = LoggerFactory.getLogger(getClass());
     private Configuration cfg = Configuration.getInstance();
+    private SessionRegistry sessionRegistry;
     @Override
     public boolean handle(HttpServletRequest request, HttpServletResponse response) {
         // 判断是前端登出还是后端登出
@@ -36,53 +38,61 @@ public class LogoutFilterHandler implements FilterHandler {
         return true;
     }
 
+    /**
+     * todo
+     * @param request
+     * @param response
+     */
     private void handleBackChannelLogout(HttpServletRequest request, HttpServletResponse response) {
         LogoutResultDto logoutResultDto = new LogoutResultDto();
-        // todo 判断前端登出还是后端登出，如果是后端登出，要从SessionRegistry中取得session
         String tk = request.getParameter(Constants.SLO_PARAM_TOKEN);
+        log.trace("handling logout via back channel, token: {}", tk);
         if (StringUtils.isEmpty(tk)) {
             logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_EMPTY);
             logoutResultDto.setMessage("token is null or empty");
-            try {
-                PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
             return;
         }
-        String principalId = null;
-
+        final HttpSession session = sessionRegistry.getSessionByTokenId(tk);
+        final Object assertionObj = session.getAttribute(cfg.assertionName);
+        if (session == null || assertionObj == null) {
+            log.trace("there is no session or assertion for the logout token {}", tk);
+            logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_NONEXISTS);
+            logoutResultDto.setMessage("already logout");
+            PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
+            return;
+        }
+        final Assertion assertion = (Assertion) assertionObj;
+        if (StringUtils.equalsIgnoreCase(assertion.getToken(), tk)) {
+            log.trace("the given token for logout {} not equals the token in the assertion {}",
+                    tk, assertion.getToken());
+            logoutResultDto.setCode(Constants.SLO_CODE_ERROR);
+            logoutResultDto.setMessage("error");
+            PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
+            return;
+        }
+        sessionRegistry.removeSessionByTokenId(tk);
+        session.setAttribute(cfg.assertionName, null);
+        session.invalidate();
+        logoutResultDto.setCode(Constants.SLO_CODE_SUCCESS);
+        logoutResultDto.setMessage("successfully logout");
+        PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
     }
+
     private void handleFrontChannelLogout(HttpServletRequest request, HttpServletResponse response) {
+        log.trace("handling logout via front channel");
         // 前端登出
-//        try{
-//            HttpSession session = request.getSession(false);
-//            String principalId = null;
-//            if (session != null) {
-//                Object assertionNameObj = session.getAttribute(cfg.assertionName);
-//                if (assertionNameObj != null) {
-//                    Assertion assertion = (Assertion) assertionNameObj;
-//                    if (assertion != null && assertion.getPrincipal() != null) {
-//                        principalId = assertion.getPrincipal().getId();
-//                    }
-//                }
-//                session.invalidate();
-//            }
-//            if (principalId != null) {
-//                logoutResultDto.setCode(Constants.SLO_CODE_SUCCESS);
-//                logoutResultDto.setMessage("handled logout request successfully");
-//                log.info("handled logout request, principal.id: {}", principalId);
-//            } else {
-//                logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_NONEXISTS);
-//                logoutResultDto.setMessage("handled logout request successfully");
-//                log.info("handled logout request, there is no principal, the token {} does not exists", tk);
-//            }
-//            PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
-//        } catch (Exception e) {
-//            logoutResultDto.setCode(Constants.SLO_CODE_ERROR);
-//            logoutResultDto.setMessage("an exception occurred when handling logout request");
-//            PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
-//        }
+        HttpSession session = request.getSession(false);
+        final Object assertionObj = session.getAttribute(cfg.assertionName);
+        if (session != null && assertionObj == null) {
+            final Assertion assertion = (Assertion) assertionObj;
+            sessionRegistry.removeSessionByTokenId(assertion.getToken());
+            session.setAttribute(cfg.assertionName, null);
+            session.invalidate();
+            log.trace("logout token {} successfully");
+        } else {
+            log.trace("there is no session or assertion for logout token current user");
+        }
     }
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -90,4 +100,11 @@ public class LogoutFilterHandler implements FilterHandler {
 
     }
 
+    public SessionRegistry getSessionRegistry() {
+        return sessionRegistry;
+    }
+
+    public void setSessionRegistry(SessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
+    }
 }
