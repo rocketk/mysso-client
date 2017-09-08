@@ -29,8 +29,8 @@ public class ValidateFilterHandler implements FilterHandler {
         // check token in session
         HttpSession session = request.getSession(false);
         // 检查 session 中的token, 从而判断是否登录
-        if (session != null && session.getAttribute(cfg.assertionName) != null) {
-            Assertion assertion = (Assertion) session.getAttribute(cfg.assertionName);
+        if (session != null && session.getAttribute(cfg.getAssertionName()) != null) {
+            Assertion assertion = (Assertion) session.getAttribute(cfg.getAssertionName());
             if (System.currentTimeMillis() < assertion.getExpiredTime()) {
                 // token 正常
                 log.info("user has been authenticated, principalId: {}, url: {}",
@@ -53,7 +53,7 @@ public class ValidateFilterHandler implements FilterHandler {
             } else {
                 // redirect to mysso-server
                 try {
-                    response.sendRedirect(cfg.authenticationUrlWithSpid);
+                    response.sendRedirect(cfg.getAuthenticationUrlWithSpid());
                 } catch (IOException e) {
                     log.error(e.getMessage(), e);
                     e.printStackTrace();
@@ -70,17 +70,17 @@ public class ValidateFilterHandler implements FilterHandler {
                     assertionDto.getPrincipal().getAttributes());
             Assertion assertion = new Assertion(assertionDto.getToken(),
                     assertionDto.getExpiredTime(), principal);
-            request.getSession().setAttribute(cfg.assertionName, assertion);
+            request.getSession().setAttribute(cfg.getAssertionName(), assertion);
             return true;
         } else if(assertionDto != null) {
             // 校验失败
             PageUtil.renderHtml(response, PageUtil.warnPage(
-                    "校验ticket失败", assertionDto.getMessage(), cfg.authenticationUrlWithSpid));
+                    "校验ticket失败", assertionDto.getMessage(), cfg.getAuthenticationUrlWithSpid()));
             return false;
         } else {
             // 校验出错
             PageUtil.renderHtml(response, PageUtil.warnPage(
-                    "校验ticket出错", "未知错误, 请联系管理员", cfg.authenticationUrlWithSpid));
+                    "校验ticket出错", "未知错误, 请联系管理员", cfg.getAuthenticationUrlWithSpid()));
             return false;
         }
     }

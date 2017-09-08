@@ -5,16 +5,16 @@ package mysso.client.core.context;
  */
 public class Configuration {
     private static Configuration instance;
-    public String assertionName;
-    public String authenticationUrl;
-    public String validationUrlPrefix;
-    public String spid;
-    public String spkey;
-    public boolean useHttps;
-    public String backChannelLogoutUri;
-    public String frontChannelLogoutUri;
-    public String serverLogoutUrl;
-    public String authenticationUrlWithSpid;
+    private String assertionName;
+    private String authenticationUrl;
+    private String validationUrlPrefix;
+    private String spid;
+    private String spkey;
+    private boolean useHttps;
+    private String backChannelLogoutUri;
+    private String frontChannelLogoutUri;
+    private String serverLogoutUrl;
+    private String authenticationUrlWithSpid;
 
     private Configuration() {
 

@@ -48,16 +48,15 @@ public class MyssoFilter implements Filter {
         log.info("loading configFile from {}", configFile);
         this.configUtil = new ConfigUtil(StringUtils.isEmpty(configFile) ? ConfigUtil.DEFAULT_CONFIG_FILE : configFile);
         cfg = Configuration.getInstance();
-        cfg.assertionName = configUtil.getProperty("assertionName", "_mysso_assertion");
-        cfg.authenticationUrl = configUtil.getProperty("authenticationUrl");
-        cfg.validationUrlPrefix = configUtil.getProperty("validationUrlPrefix");
-        cfg.validationUrlPrefix = removeSlash(cfg.validationUrlPrefix);
-        cfg.spid = configUtil.getProperty("spid");
-        cfg.spkey = configUtil.getProperty("spkey");
-        cfg.backChannelLogoutUri = configUtil.getProperty("backChannelLogoutUri");
-        cfg.frontChannelLogoutUri = configUtil.getProperty("frontChannelLogoutUri");
-        cfg.serverLogoutUrl = configUtil.getProperty("serverLogoutUrl");
-        cfg.authenticationUrlWithSpid = cfg.authenticationUrl + "?" + Constants.PARAM_SPID + "=" + cfg.spid;
+        cfg.setAssertionName(configUtil.getProperty("assertionName", "_mysso_assertion"));
+        cfg.setAuthenticationUrl(configUtil.getProperty("authenticationUrl"));
+        cfg.setValidationUrlPrefix(removeSlash(configUtil.getProperty("validationUrlPrefix")));
+        cfg.setSpid(configUtil.getProperty("spid"));
+        cfg.setSpkey(configUtil.getProperty("spkey"));
+        cfg.setBackChannelLogoutUri(configUtil.getProperty("backChannelLogoutUri"));
+        cfg.setFrontChannelLogoutUri(configUtil.getProperty("frontChannelLogoutUri"));
+        cfg.setServerLogoutUrl(configUtil.getProperty("serverLogoutUrl"));
+        cfg.setAuthenticationUrlWithSpid(cfg.getAuthenticationUrl() + "?" + Constants.PARAM_SPID + "=" + cfg.getSpid());
     }
 
     private void loadInterfaceProviderContext(FilterConfig filterConfig) {

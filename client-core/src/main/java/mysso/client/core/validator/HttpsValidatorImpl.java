@@ -29,9 +29,9 @@ public class HttpsValidatorImpl implements Validator {
 
     public HttpsValidatorImpl() {
         Configuration cfg = Configuration.getInstance();
-        spid = cfg.spid;
-        spkey = cfg.spkey;
-        validationUrlPrefix = cfg.validationUrlPrefix;
+        spid = cfg.getSpid();
+        spkey = cfg.getSpkey();
+        validationUrlPrefix = cfg.getValidationUrlPrefix();
     }
 
     @Override

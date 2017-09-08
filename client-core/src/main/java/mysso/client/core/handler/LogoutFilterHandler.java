@@ -27,10 +27,10 @@ public class LogoutFilterHandler implements FilterHandler {
     public boolean handle(HttpServletRequest request, HttpServletResponse response) {
         // 判断是前端登出还是后端登出
         String servletPath = request.getServletPath();
-        if (servletPath.startsWith(cfg.backChannelLogoutUri)) {
+        if (servletPath.startsWith(cfg.getBackChannelLogoutUri())) {
             handleBackChannelLogout(request, response);
             return false;
-        } else if (servletPath.startsWith(cfg.frontChannelLogoutUri)) {
+        } else if (servletPath.startsWith(cfg.getFrontChannelLogoutUri())) {
             handleFrontChannelLogout(request, response);
             return false;
         }
@@ -54,7 +54,7 @@ public class LogoutFilterHandler implements FilterHandler {
             return;
         }
         final HttpSession session = sessionRegistry.getSessionByTokenId(tk);
-        final Object assertionObj = session.getAttribute(cfg.assertionName);
+        final Object assertionObj = session.getAttribute(cfg.getAssertionName());
         if (session == null || assertionObj == null) {
             log.trace("there is no session or assertion for the logout token {}", tk);
             logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_NONEXISTS);
@@ -72,7 +72,7 @@ public class LogoutFilterHandler implements FilterHandler {
             return;
         }
         sessionRegistry.removeSessionByTokenId(tk);
-        session.setAttribute(cfg.assertionName, null);
+        session.setAttribute(cfg.getAssertionName(), null);
         session.invalidate();
         logoutResultDto.setCode(Constants.SLO_CODE_SUCCESS);
         logoutResultDto.setMessage("successfully logout");
@@ -83,11 +83,11 @@ public class LogoutFilterHandler implements FilterHandler {
         log.trace("handling logout via front channel");
         // 前端登出
         HttpSession session = request.getSession(false);
-        final Object assertionObj = session.getAttribute(cfg.assertionName);
+        final Object assertionObj = session.getAttribute(cfg.getAssertionName());
         if (session != null && assertionObj == null) {
             final Assertion assertion = (Assertion) assertionObj;
             sessionRegistry.removeSessionByTokenId(assertion.getToken());
-            session.setAttribute(cfg.assertionName, null);
+            session.setAttribute(cfg.getAssertionName(), null);
             session.invalidate();
             log.trace("logout token {} successfully");
         } else {
