@@ -12,7 +12,7 @@
 </head>
 <body>
 <h1>hello, this is a demo client for mysso</h1>
-<p><a href="${ctx}${cfg.frontChannelLogoutUri}">退出</a> </p>
+<p><a href="${cfg.serverLogoutUrl}">退出</a> </p>
 <p>principal</p>
 <p>id: ${assertion.principal.id}</p>
 <p>attributes: </p>

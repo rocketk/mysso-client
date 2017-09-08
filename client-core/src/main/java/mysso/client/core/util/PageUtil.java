@@ -27,7 +27,6 @@ public class PageUtil {
         return page.toString();
     }
 
-
     public static void render(HttpServletResponse response, String content, String contentType) {
         response.setContentType(contentType);
         response.setHeader("Content-Type", contentType);

@@ -83,21 +83,26 @@ public class LogoutFilterHandler implements FilterHandler {
         log.trace("handling logout via front channel");
         // 前端登出
         HttpSession session = request.getSession(false);
-        final Object assertionObj = session.getAttribute(cfg.getAssertionName());
-        if (session != null && assertionObj == null) {
-            final Assertion assertion = (Assertion) assertionObj;
-            sessionRegistry.removeSessionByTokenId(assertion.getToken());
-            session.setAttribute(cfg.getAssertionName(), null);
-            session.invalidate();
-            log.trace("logout token {} successfully");
-        } else {
-            log.trace("there is no session or assertion for logout token current user");
+        if (session != null ) {
+            final Object assertionObj = session.getAttribute(cfg.getAssertionName());
+            if (assertionObj != null) {
+                final Assertion assertion = (Assertion) assertionObj;
+                sessionRegistry.removeSessionByTokenId(assertion.getToken());
+                session.setAttribute(cfg.getAssertionName(), null);
+                session.invalidate();
+                log.trace("logout token {} via frontChannel successfully");
+                PageUtil.renderHtml(response, PageUtil.warnPage("前端登出成功",
+                        "前端登出成功，但是仍需前往服务端登出",
+                        cfg.getServerLogoutUrl(),
+                        "服务端登出"));
+                return;
+            }
         }
-    }
-
-    private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-
+        log.trace("there is no session or assertion for logout token current user");
+        PageUtil.renderHtml(response, PageUtil.warnPage("前端登出成功",
+                "前端登出成功，但是仍需前往服务端登出",
+                cfg.getServerLogoutUrl(),
+                "服务端登出"));
     }
 
     public SessionRegistry getSessionRegistry() {
