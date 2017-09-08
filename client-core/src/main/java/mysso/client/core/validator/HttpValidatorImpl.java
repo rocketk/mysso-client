@@ -1,6 +1,7 @@
 package mysso.client.core.validator;
 
 import com.alibaba.fastjson.JSON;
+import mysso.client.core.context.Configuration;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
 import org.apache.commons.io.IOUtils;
@@ -32,12 +33,10 @@ public class HttpValidatorImpl implements Validator {
     private CloseableHttpClient httpclient = HttpClients.createDefault();
 
     public HttpValidatorImpl() {
-    }
-
-    public HttpValidatorImpl(String spid, String spkey, String validationUrlPrefix) {
-        this.spid = spid;
-        this.spkey = spkey;
-        this.validationUrlPrefix = validationUrlPrefix;
+        Configuration cfg = Configuration.getInstance();
+        spid = cfg.spid;
+        spkey = cfg.spkey;
+        validationUrlPrefix = cfg.validationUrlPrefix;
     }
 
     @Override

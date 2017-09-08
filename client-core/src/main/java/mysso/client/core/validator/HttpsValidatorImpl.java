@@ -1,5 +1,6 @@
 package mysso.client.core.validator;
 
+import mysso.client.core.context.Configuration;
 import mysso.protocol1.dto.AssertionDto;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -18,20 +19,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * todo
  * Created by pengyu on 2017/8/23.
  */
 public class HttpsValidatorImpl implements Validator {
     private String spid;
     private String spkey;
-    private String validationUrl;
+    private String validationUrlPrefix;
 
     public HttpsValidatorImpl() {
-    }
-
-    public HttpsValidatorImpl(String spid, String spkey, String validationUrl) {
-        this.spid = spid;
-        this.spkey = spkey;
-        this.validationUrl = validationUrl;
+        Configuration cfg = Configuration.getInstance();
+        spid = cfg.spid;
+        spkey = cfg.spkey;
+        validationUrlPrefix = cfg.validationUrlPrefix;
     }
 
     @Override
@@ -62,11 +62,11 @@ public class HttpsValidatorImpl implements Validator {
         this.spkey = spkey;
     }
 
-    public String getValidationUrl() {
-        return validationUrl;
+    public String getValidationUrlPrefix() {
+        return validationUrlPrefix;
     }
 
-    public void setValidationUrl(String validationUrl) {
-        this.validationUrl = validationUrl;
+    public void setValidationUrlPrefix(String validationUrlPrefix) {
+        this.validationUrlPrefix = validationUrlPrefix;
     }
 }
