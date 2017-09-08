@@ -1,6 +1,7 @@
 package mysso.client.core.handler;
 
 import mysso.client.core.context.Configuration;
+import mysso.client.core.context.InterfaceProviderContext;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.model.Principal;
 import mysso.client.core.util.PageUtil;
@@ -21,7 +22,7 @@ import java.io.IOException;
 public class ValidateFilterHandler implements FilterHandler {
     private Logger log = LoggerFactory.getLogger(getClass());
     private Configuration cfg = Configuration.getInstance();
-    private Validator validator;
+    private Validator validator = InterfaceProviderContext.getInstance().getBean(Validator.class);
 
     @Override
     public boolean handle(HttpServletRequest request, HttpServletResponse response) {
@@ -84,4 +85,7 @@ public class ValidateFilterHandler implements FilterHandler {
         }
     }
 
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
 }

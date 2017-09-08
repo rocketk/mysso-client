@@ -1,6 +1,5 @@
 package mysso.client.core.util;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,13 +12,12 @@ import java.util.Set;
  */
 public class ConfigUtil {
     private Logger log = LoggerFactory.getLogger(ConfigUtil.class);
-    private String configFile;
     private final Properties properties = new Properties();
 
-    private static final String DEFAULT_CONFIG_FILE = "/myssoclient.properties";
+    public static final String DEFAULT_CONFIG_FILE = "/myssoclient.properties";
+    public static final String DEFAULT_BEANS_CONFIG_FILE = "/myssoclient-beans.properties";
 
     public ConfigUtil(String configFile) {
-        this.configFile = StringUtils.isEmpty(configFile) ? DEFAULT_CONFIG_FILE : configFile;
         log.info("loading configFile from {}", configFile);
         try {
             this.properties.load(this.getClass().getResourceAsStream(configFile));

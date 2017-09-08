@@ -6,15 +6,15 @@ import java.util.Map;
 /**
  * Created by pengyu on 17-9-7.
  */
-public class ApplicationContext {
-    private static ApplicationContext instance;
+public class InterfaceProviderContext {
+    private static InterfaceProviderContext instance;
     private Map<Class, Object> beans = new HashMap<>();
-    private ApplicationContext() {
+    private InterfaceProviderContext() {
 
     }
-    public static ApplicationContext getInstance() {
+    public static InterfaceProviderContext getInstance() {
         if (instance == null) {
-            instance = new ApplicationContext();
+            instance = new InterfaceProviderContext();
         }
         return instance;
     }
