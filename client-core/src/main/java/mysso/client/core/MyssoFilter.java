@@ -68,10 +68,8 @@ public class MyssoFilter implements Filter {
     private void loadFilterHandlers() {
         this.filterHandlers = new ArrayList();
         LogoutFilterHandler logoutFilterHandler = new LogoutFilterHandler();
-        logoutFilterHandler.setSessionRegistry(interfaceProviderContext.getBean(SessionRegistry.class));
         this.filterHandlers.add(logoutFilterHandler);
         ValidateFilterHandler validateFilterHandler = new ValidateFilterHandler();
-        validateFilterHandler.setValidator(interfaceProviderContext.getBean(Validator.class));
         this.filterHandlers.add(validateFilterHandler);
     }
 

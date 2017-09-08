@@ -2,6 +2,7 @@ package mysso.client.core.handler;
 
 import com.alibaba.fastjson.JSON;
 import mysso.client.core.context.Configuration;
+import mysso.client.core.context.InterfaceProviderContext;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.session.SessionRegistry;
 import mysso.client.core.util.PageUtil;
@@ -22,7 +23,7 @@ import java.io.IOException;
 public class LogoutFilterHandler implements FilterHandler {
     private Logger log = LoggerFactory.getLogger(getClass());
     private Configuration cfg = Configuration.getInstance();
-    private SessionRegistry sessionRegistry;
+    private SessionRegistry sessionRegistry = InterfaceProviderContext.getInstance().getBean(SessionRegistry.class);
     @Override
     public boolean handle(HttpServletRequest request, HttpServletResponse response) {
         // 判断是前端登出还是后端登出
@@ -54,20 +55,20 @@ public class LogoutFilterHandler implements FilterHandler {
             return;
         }
         final HttpSession session = sessionRegistry.getSessionByTokenId(tk);
-        final Object assertionObj = session.getAttribute(cfg.getAssertionName());
-        if (session == null || assertionObj == null) {
+        if (session == null || session.getAttribute(cfg.getAssertionName()) == null) {
             log.trace("there is no session or assertion for the logout token {}", tk);
             logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_NONEXISTS);
             logoutResultDto.setMessage("already logout");
             PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
             return;
         }
+        final Object assertionObj = session.getAttribute(cfg.getAssertionName());
         final Assertion assertion = (Assertion) assertionObj;
-        if (StringUtils.equalsIgnoreCase(assertion.getToken(), tk)) {
-            log.trace("the given token for logout {} not equals the token in the assertion {}",
+        if (!StringUtils.equalsIgnoreCase(assertion.getToken(), tk)) {
+            log.error("the given token for logout {} not equals the token in the assertion {}",
                     tk, assertion.getToken());
             logoutResultDto.setCode(Constants.SLO_CODE_ERROR);
-            logoutResultDto.setMessage("error");
+            logoutResultDto.setMessage("invalid token");
             PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
             return;
         }

@@ -4,6 +4,7 @@ import mysso.client.core.context.Configuration;
 import mysso.client.core.context.InterfaceProviderContext;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.model.Principal;
+import mysso.client.core.session.SessionRegistry;
 import mysso.client.core.util.PageUtil;
 import mysso.client.core.validator.Validator;
 import mysso.protocol1.Constants;
@@ -22,6 +23,7 @@ import java.io.IOException;
 public class ValidateFilterHandler implements FilterHandler {
     private Logger log = LoggerFactory.getLogger(getClass());
     private Configuration cfg = Configuration.getInstance();
+    private SessionRegistry sessionRegistry = InterfaceProviderContext.getInstance().getBean(SessionRegistry.class);
     private Validator validator = InterfaceProviderContext.getInstance().getBean(Validator.class);
 
     @Override
@@ -70,7 +72,9 @@ public class ValidateFilterHandler implements FilterHandler {
                     assertionDto.getPrincipal().getAttributes());
             Assertion assertion = new Assertion(assertionDto.getToken(),
                     assertionDto.getExpiredTime(), principal);
-            request.getSession().setAttribute(cfg.getAssertionName(), assertion);
+            HttpSession session = request.getSession();
+            session.setAttribute(cfg.getAssertionName(), assertion);
+            sessionRegistry.putSessionByTokenId(assertion.getToken(), session);
             return true;
         } else if(assertionDto != null) {
             // 校验失败
