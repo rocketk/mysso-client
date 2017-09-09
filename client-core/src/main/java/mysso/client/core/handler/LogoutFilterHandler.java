@@ -49,6 +49,7 @@ public class LogoutFilterHandler implements FilterHandler {
         String tk = request.getParameter(Constants.SLO_PARAM_TOKEN);
         log.trace("handling logout via back channel, token: {}", tk);
         if (StringUtils.isEmpty(tk)) {
+            log.trace("token {} is empty", tk);
             logoutResultDto.setCode(Constants.SLO_CODE_TOKEN_EMPTY);
             logoutResultDto.setMessage("token is null or empty");
             PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));
@@ -75,6 +76,7 @@ public class LogoutFilterHandler implements FilterHandler {
         sessionRegistry.removeSessionByTokenId(tk);
         session.setAttribute(cfg.getAssertionName(), null);
         session.invalidate();
+        log.trace("handled logout via back channel successfully, tk: {}", tk);
         logoutResultDto.setCode(Constants.SLO_CODE_SUCCESS);
         logoutResultDto.setMessage("successfully logout");
         PageUtil.renderJson(response, JSON.toJSONString(logoutResultDto));

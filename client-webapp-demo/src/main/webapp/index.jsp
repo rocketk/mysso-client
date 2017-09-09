@@ -8,7 +8,7 @@
 
 <html>
 <head>
-    <title>protected page</title>
+    <title>mysso-client-demo</title>
 </head>
 <body>
 <h1>hello, this is a demo client for mysso</h1>
