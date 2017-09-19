@@ -9,7 +9,7 @@ public class Configuration {
     private String authenticationUrl;
     private String validationUrlPrefix;
     private String spid;
-    private String spkey;
+    private String secret;
     private boolean useHttps;
     private String backChannelLogoutUri;
     private String frontChannelLogoutUri;
@@ -59,12 +59,12 @@ public class Configuration {
         this.spid = spid;
     }
 
-    public String getSpkey() {
-        return spkey;
+    public String getSecret() {
+        return secret;
     }
 
-    public void setSpkey(String spkey) {
-        this.spkey = spkey;
+    public void setSecret(String secret) {
+        this.secret = secret;
     }
 
     public boolean isUseHttps() {
