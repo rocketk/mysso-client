@@ -2,6 +2,8 @@ package mysso.client.core.validator;
 
 import com.alibaba.fastjson.JSON;
 import mysso.client.core.context.Configuration;
+import mysso.client.core.context.InterfaceProviderContext;
+import mysso.client.core.security.SecretPasscodeGenerator;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
 import org.apache.commons.io.IOUtils;
@@ -28,14 +30,15 @@ import java.util.List;
 public class HttpValidatorImpl implements Validator {
     private Logger log = LoggerFactory.getLogger(getClass());
     private String spid;
-    private String spkey;
+    private String secret;
     private String validationUrlPrefix;
     private CloseableHttpClient httpclient = HttpClients.createDefault();
+    private SecretPasscodeGenerator secretPasscodeGenerator = InterfaceProviderContext.getInstance().getBean(SecretPasscodeGenerator.class);
 
     public HttpValidatorImpl() {
         Configuration cfg = Configuration.getInstance();
         spid = cfg.getSpid();
-        spkey = cfg.getSpkey();
+        secret = cfg.getSecret();
         validationUrlPrefix = cfg.getValidationUrlPrefix();
     }
 
@@ -55,7 +58,7 @@ public class HttpValidatorImpl implements Validator {
             HttpPost httpPost = new HttpPost(validateUrl);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
             nvps.add(new BasicNameValuePair(Constants.PARAM_SPID, spid));
-            nvps.add(new BasicNameValuePair(Constants.PARAM_SPKEY, spkey));
+            nvps.add(new BasicNameValuePair(Constants.PARAM_SECRET_PASSCODE, secretPasscodeGenerator.generate(secret)));
             nvps.add(new BasicNameValuePair(paramName, ticket));
             httpPost.setEntity(new UrlEncodedFormEntity(nvps));
             log.trace("sending ticket validation request to mysso-server, url: {}, ticket: {}, spid: {}, validateUrl: {}",
@@ -73,7 +76,7 @@ public class HttpValidatorImpl implements Validator {
             return assertionDto;
         } catch (Exception e) {
             log.error("an exception occurred when sending validation request, caused by: " + e.getMessage(), e);
-            e.printStackTrace();
+//            e.printStackTrace();
         } finally {
             if (response != null) {
                 try {
@@ -87,27 +90,4 @@ public class HttpValidatorImpl implements Validator {
         return null;
     }
 
-    public String getSpid() {
-        return spid;
-    }
-
-    public void setSpid(String spid) {
-        this.spid = spid;
-    }
-
-    public String getSpkey() {
-        return spkey;
-    }
-
-    public void setSpkey(String spkey) {
-        this.spkey = spkey;
-    }
-
-    public String getValidationUrlPrefix() {
-        return validationUrlPrefix;
-    }
-
-    public void setValidationUrlPrefix(String validationUrlPrefix) {
-        this.validationUrlPrefix = validationUrlPrefix;
-    }
 }

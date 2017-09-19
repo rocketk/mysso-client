@@ -6,9 +6,7 @@ import mysso.client.core.context.InterfaceProviderContextFactory;
 import mysso.client.core.handler.FilterHandler;
 import mysso.client.core.handler.LogoutFilterHandler;
 import mysso.client.core.handler.ValidateFilterHandler;
-import mysso.client.core.session.SessionRegistry;
 import mysso.client.core.util.ConfigUtil;
-import mysso.client.core.validator.Validator;
 import mysso.protocol1.Constants;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -52,7 +50,7 @@ public class MyssoFilter implements Filter {
         cfg.setAuthenticationUrl(configUtil.getProperty("authenticationUrl"));
         cfg.setValidationUrlPrefix(removeSlash(configUtil.getProperty("validationUrlPrefix")));
         cfg.setSpid(configUtil.getProperty("spid"));
-        cfg.setSpkey(configUtil.getProperty("spkey"));
+        cfg.setSecret(configUtil.getProperty("passcode"));
         cfg.setBackChannelLogoutUri(configUtil.getProperty("backChannelLogoutUri"));
         cfg.setFrontChannelLogoutUri(configUtil.getProperty("frontChannelLogoutUri"));
         cfg.setServerLogoutUrl(configUtil.getProperty("serverLogoutUrl"));
