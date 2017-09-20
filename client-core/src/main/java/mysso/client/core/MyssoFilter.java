@@ -1,12 +1,14 @@
 package mysso.client.core;
 
+import mysso.client.core.context.BeansContextFactory;
 import mysso.client.core.context.Configuration;
-import mysso.client.core.context.InterfaceProviderContext;
-import mysso.client.core.context.InterfaceProviderContextFactory;
+import mysso.client.core.context.BeansContext;
 import mysso.client.core.handler.FilterHandler;
 import mysso.client.core.handler.LogoutFilterHandler;
 import mysso.client.core.handler.ValidateFilterHandler;
+import mysso.client.core.session.SessionRegistry;
 import mysso.client.core.util.ConfigUtil;
+import mysso.client.core.validator.Validator;
 import mysso.protocol1.Constants;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,27 +27,27 @@ import java.util.List;
 public class MyssoFilter implements Filter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public ConfigUtil configUtil;
-    public ConfigUtil configUtil4Beans;
-
     private Configuration cfg;
 
-    private InterfaceProviderContext interfaceProviderContext;
+    private BeansContext beansContext;
 
     private List<FilterHandler> filterHandlers;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        this.loadConfiguration(filterConfig);
-        this.loadInterfaceProviderContext(filterConfig);
-        this.loadFilterHandlers();
+        boolean needLoadConfigurationAndBeansContext = Boolean.valueOf(filterConfig.getInitParameter("needLoadConfigurationAndBeansContext"));
+        if (needLoadConfigurationAndBeansContext) {
+            this.loadBeansContext(filterConfig);
+            this.loadConfiguration(filterConfig);
+            this.loadFilterHandlers();
+        }
     }
 
     private void loadConfiguration(FilterConfig filterConfig) {
         String configFile = filterConfig.getInitParameter("configFile");
         log.info("loading configFile from {}", configFile);
-        this.configUtil = new ConfigUtil(StringUtils.isEmpty(configFile) ? ConfigUtil.DEFAULT_CONFIG_FILE : configFile);
-        cfg = Configuration.getInstance();
+        ConfigUtil configUtil = new ConfigUtil(StringUtils.isEmpty(configFile) ? ConfigUtil.DEFAULT_CONFIG_FILE : configFile);
+        cfg = beansContext.getBean(Configuration.class);
         cfg.setAssertionName(configUtil.getProperty("assertionName", "_mysso_assertion"));
         cfg.setAuthenticationUrl(configUtil.getProperty("authenticationUrl"));
         cfg.setValidationUrlPrefix(removeSlash(configUtil.getProperty("validationUrlPrefix")));
@@ -57,17 +59,21 @@ public class MyssoFilter implements Filter {
         cfg.setAuthenticationUrlWithSpid(cfg.getAuthenticationUrl() + "?" + Constants.PARAM_SPID + "=" + cfg.getSpid());
     }
 
-    private void loadInterfaceProviderContext(FilterConfig filterConfig) {
+    private void loadBeansContext(FilterConfig filterConfig) {
         String configFile4Beans = filterConfig.getInitParameter("configFile4Beans");
-        interfaceProviderContext = InterfaceProviderContextFactory.createInterfaceProviderContext(
-                StringUtils.isEmpty(configFile4Beans) ? ConfigUtil.DEFAULT_BEANS_CONFIG_FILE : configFile4Beans);
+        beansContext = new BeansContextFactory(StringUtils.isEmpty(configFile4Beans) ?
+                ConfigUtil.DEFAULT_BEANS_CONFIG_FILE : configFile4Beans).createInterfaceProviderContext();
     }
 
     private void loadFilterHandlers() {
         this.filterHandlers = new ArrayList();
         LogoutFilterHandler logoutFilterHandler = new LogoutFilterHandler();
+        logoutFilterHandler.setSessionRegistry(beansContext.getBean(SessionRegistry.class));
+        logoutFilterHandler.setCfg(cfg);
         this.filterHandlers.add(logoutFilterHandler);
         ValidateFilterHandler validateFilterHandler = new ValidateFilterHandler();
+        validateFilterHandler.setValidator(beansContext.getBean(Validator.class));
+        validateFilterHandler.setCfg(cfg);
         this.filterHandlers.add(validateFilterHandler);
     }
 

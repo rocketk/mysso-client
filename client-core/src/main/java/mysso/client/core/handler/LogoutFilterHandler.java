@@ -2,7 +2,6 @@ package mysso.client.core.handler;
 
 import com.alibaba.fastjson.JSON;
 import mysso.client.core.context.Configuration;
-import mysso.client.core.context.InterfaceProviderContext;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.session.SessionRegistry;
 import mysso.client.core.util.PageUtil;
@@ -15,15 +14,23 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
 
 /**
  * Created by pengyu on 2017/9/4.
  */
 public class LogoutFilterHandler implements FilterHandler {
-    private Logger log = LoggerFactory.getLogger(getClass());
-    private Configuration cfg = Configuration.getInstance();
-    private SessionRegistry sessionRegistry = InterfaceProviderContext.getInstance().getBean(SessionRegistry.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private Configuration cfg;
+    private SessionRegistry sessionRegistry;
+
+    public LogoutFilterHandler() {
+    }
+
+    public LogoutFilterHandler(Configuration cfg, SessionRegistry sessionRegistry) {
+        this.cfg = cfg;
+        this.sessionRegistry = sessionRegistry;
+    }
+
     @Override
     public boolean handle(HttpServletRequest request, HttpServletResponse response) {
         // 判断是前端登出还是后端登出
@@ -108,8 +115,8 @@ public class LogoutFilterHandler implements FilterHandler {
                 "服务端登出"));
     }
 
-    public SessionRegistry getSessionRegistry() {
-        return sessionRegistry;
+    public void setCfg(Configuration cfg) {
+        this.cfg = cfg;
     }
 
     public void setSessionRegistry(SessionRegistry sessionRegistry) {

@@ -1,7 +1,6 @@
 package mysso.client.core.handler;
 
 import mysso.client.core.context.Configuration;
-import mysso.client.core.context.InterfaceProviderContext;
 import mysso.client.core.model.Assertion;
 import mysso.client.core.model.Principal;
 import mysso.client.core.session.SessionRegistry;
@@ -21,10 +20,19 @@ import java.io.IOException;
  * Created by pengyu on 2017/9/4.
  */
 public class ValidateFilterHandler implements FilterHandler {
-    private Logger log = LoggerFactory.getLogger(getClass());
-    private Configuration cfg = Configuration.getInstance();
-    private SessionRegistry sessionRegistry = InterfaceProviderContext.getInstance().getBean(SessionRegistry.class);
-    private Validator validator = InterfaceProviderContext.getInstance().getBean(Validator.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private Configuration cfg;
+    private SessionRegistry sessionRegistry;
+    private Validator validator;
+
+    public ValidateFilterHandler() {
+    }
+
+    public ValidateFilterHandler(Configuration cfg, SessionRegistry sessionRegistry, Validator validator) {
+        this.cfg = cfg;
+        this.sessionRegistry = sessionRegistry;
+        this.validator = validator;
+    }
 
     @Override
     public boolean handle(HttpServletRequest request, HttpServletResponse response) {
@@ -87,6 +95,14 @@ public class ValidateFilterHandler implements FilterHandler {
                     "校验ticket出错", "未知错误, 请联系管理员", cfg.getAuthenticationUrlWithSpid()));
             return false;
         }
+    }
+
+    public void setCfg(Configuration cfg) {
+        this.cfg = cfg;
+    }
+
+    public void setSessionRegistry(SessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
     }
 
     public void setValidator(Validator validator) {

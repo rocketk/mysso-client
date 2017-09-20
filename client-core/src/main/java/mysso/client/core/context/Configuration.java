@@ -4,28 +4,28 @@ package mysso.client.core.context;
  * Created by pengyu on 2017/9/4.
  */
 public class Configuration {
-    private static Configuration instance;
+//    private static Configuration instance;
     private String assertionName;
     private String authenticationUrl;
     private String validationUrlPrefix;
     private String spid;
     private String secret;
-    private boolean useHttps;
+//    private boolean useHttps;
     private String backChannelLogoutUri;
     private String frontChannelLogoutUri;
     private String serverLogoutUrl;
     private String authenticationUrlWithSpid;
 
-    private Configuration() {
-
-    }
-
-    public static Configuration getInstance() {
-        if (instance == null) {
-            instance = new Configuration();
-        }
-        return instance;
-    }
+//    private Configuration() {
+//
+//    }
+//
+//    public static Configuration getInstance() {
+//        if (instance == null) {
+//            instance = new Configuration();
+//        }
+//        return instance;
+//    }
 
     public String getAssertionName() {
         return assertionName;
@@ -67,13 +67,13 @@ public class Configuration {
         this.secret = secret;
     }
 
-    public boolean isUseHttps() {
-        return useHttps;
-    }
-
-    public void setUseHttps(boolean useHttps) {
-        this.useHttps = useHttps;
-    }
+//    public boolean isUseHttps() {
+//        return useHttps;
+//    }
+//
+//    public void setUseHttps(boolean useHttps) {
+//        this.useHttps = useHttps;
+//    }
 
     public String getBackChannelLogoutUri() {
         return backChannelLogoutUri;
@@ -106,4 +106,5 @@ public class Configuration {
     public void setAuthenticationUrlWithSpid(String authenticationUrlWithSpid) {
         this.authenticationUrlWithSpid = authenticationUrlWithSpid;
     }
+
 }

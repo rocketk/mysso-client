@@ -2,7 +2,6 @@ package mysso.client.core.validator;
 
 import com.alibaba.fastjson.JSON;
 import mysso.client.core.context.Configuration;
-import mysso.client.core.context.InterfaceProviderContext;
 import mysso.client.core.security.SecretPasscodeGenerator;
 import mysso.protocol1.Constants;
 import mysso.protocol1.dto.AssertionDto;
@@ -28,28 +27,27 @@ import java.util.List;
  * Created by pengyu on 2017/8/23.
  */
 public class HttpValidatorImpl implements Validator {
-    private Logger log = LoggerFactory.getLogger(getClass());
-    private String spid;
-    private String secret;
-    private String validationUrlPrefix;
-    private CloseableHttpClient httpclient = HttpClients.createDefault();
-    private SecretPasscodeGenerator secretPasscodeGenerator = InterfaceProviderContext.getInstance().getBean(SecretPasscodeGenerator.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final CloseableHttpClient httpclient = HttpClients.createDefault();
+    private SecretPasscodeGenerator secretPasscodeGenerator;
+    private Configuration cfg;
 
     public HttpValidatorImpl() {
-        Configuration cfg = Configuration.getInstance();
-        spid = cfg.getSpid();
-        secret = cfg.getSecret();
-        validationUrlPrefix = cfg.getValidationUrlPrefix();
+    }
+
+    public HttpValidatorImpl(SecretPasscodeGenerator secretPasscodeGenerator, Configuration cfg) {
+        this.secretPasscodeGenerator = secretPasscodeGenerator;
+        this.cfg = cfg;
     }
 
     @Override
     public AssertionDto validateServiceTicket(String st) {
-        return validateTicket(st, Constants.PARAM_SERVICE_TICKET, validationUrlPrefix + Constants.VALIDATE_ST_URI);
+        return validateTicket(st, Constants.PARAM_SERVICE_TICKET, cfg.getValidationUrlPrefix() + Constants.VALIDATE_ST_URI);
     }
 
     @Override
     public AssertionDto validateToken(String tk) {
-        return validateTicket(tk, Constants.PARAM_TOKEN, validationUrlPrefix + Constants.VALIDATE_TK_URI);
+        return validateTicket(tk, Constants.PARAM_TOKEN, cfg.getValidationUrlPrefix() + Constants.VALIDATE_TK_URI);
     }
 
     private AssertionDto validateTicket(String ticket, String paramName, String validateUrl) {
@@ -57,12 +55,12 @@ public class HttpValidatorImpl implements Validator {
         try {
             HttpPost httpPost = new HttpPost(validateUrl);
             List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-            nvps.add(new BasicNameValuePair(Constants.PARAM_SPID, spid));
-            nvps.add(new BasicNameValuePair(Constants.PARAM_SECRET_PASSCODE, secretPasscodeGenerator.generate(secret)));
+            nvps.add(new BasicNameValuePair(Constants.PARAM_SPID, cfg.getSpid()));
+            nvps.add(new BasicNameValuePair(Constants.PARAM_SECRET_PASSCODE, secretPasscodeGenerator.generate(cfg.getSecret())));
             nvps.add(new BasicNameValuePair(paramName, ticket));
             httpPost.setEntity(new UrlEncodedFormEntity(nvps));
             log.trace("sending ticket validation request to mysso-server, url: {}, ticket: {}, spid: {}, validateUrl: {}",
-                    validationUrlPrefix + Constants.VALIDATE_ST_URI, ticket, spid, validateUrl);
+                    cfg.getValidationUrlPrefix() + Constants.VALIDATE_ST_URI, ticket, cfg.getSpid(), validateUrl);
             response = httpclient.execute(httpPost);
             log.trace("received ticket validation response, status: {}", response.getStatusLine().getStatusCode());
             HttpEntity entity = response.getEntity();
@@ -90,4 +88,23 @@ public class HttpValidatorImpl implements Validator {
         return null;
     }
 
+    public CloseableHttpClient getHttpclient() {
+        return httpclient;
+    }
+
+    public SecretPasscodeGenerator getSecretPasscodeGenerator() {
+        return secretPasscodeGenerator;
+    }
+
+    public void setSecretPasscodeGenerator(SecretPasscodeGenerator secretPasscodeGenerator) {
+        this.secretPasscodeGenerator = secretPasscodeGenerator;
+    }
+
+    public Configuration getCfg() {
+        return cfg;
+    }
+
+    public void setCfg(Configuration cfg) {
+        this.cfg = cfg;
+    }
 }
