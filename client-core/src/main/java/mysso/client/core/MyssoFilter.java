@@ -53,7 +53,7 @@ public class MyssoFilter implements Filter {
         cfg.setAuthenticationUrl(configUtil.getProperty("authenticationUrl"));
         cfg.setValidationUrlPrefix(removeSlash(configUtil.getProperty("validationUrlPrefix")));
         cfg.setSpid(configUtil.getProperty("spid"));
-        cfg.setSecret(configUtil.getProperty("passcode"));
+        cfg.setSecret(configUtil.getProperty("secret"));
         cfg.setBackChannelLogoutUri(configUtil.getProperty("backChannelLogoutUri"));
         cfg.setFrontChannelLogoutUri(configUtil.getProperty("frontChannelLogoutUri"));
         cfg.setServerLogoutUrl(configUtil.getProperty("serverLogoutUrl"));
