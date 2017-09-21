@@ -1,11 +1,10 @@
 <%@ page import="mysso.client.core.context.Configuration" %>
-<%@ page import="mysso.client.core.context.BeansContext" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <c:set var="ctx" value="<%=request.getContextPath()%>"/>
-<c:set var="cfg" value="<%=BeansContext.getInstance().getBean(Configuration.class)%>"/>
-<c:set var="assertion" value="<%=request.getSession().getAttribute(BeansContext.getInstance().getBean(Configuration.class).getAssertionName())%>"/>
+<c:set var="cfg" value="<%=application.getAttribute("cfg")%>"/>
+<c:set var="assertion" value="<%=session.getAttribute(((Configuration)application.getAttribute("cfg")).getAssertionName())%>"/>
 
 <html>
 <head>

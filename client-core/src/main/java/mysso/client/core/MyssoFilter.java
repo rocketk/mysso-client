@@ -41,6 +41,7 @@ public class MyssoFilter implements Filter {
             this.loadConfiguration(filterConfig);
             this.loadFilterHandlers();
         }
+        filterConfig.getServletContext().setAttribute("cfg", cfg);
     }
 
     private void loadConfiguration(FilterConfig filterConfig) {

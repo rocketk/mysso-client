@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created by pengyu on 2017/9/8.
@@ -50,22 +48,16 @@ public class BeansContextFactory {
     }
 
     private void injectDependencies(BeansContext context) throws IllegalAccessException {
-        Set failed = new HashSet();
-        do {
-            for (Object providerObj : context.getBeans()) {
-                Class providerClass = providerObj.getClass();
-                for (Field field : providerClass.getDeclaredFields()) {
-                    if (field.getAnnotation(Bean.class) != null) {
-                        Object bean = context.getBean(field.getDeclaringClass());
-                        if (bean != null) {
-                            field.set(providerObj, bean);
-                            failed.remove(providerObj);
-                        } else {
-                            failed.add(providerObj);
-                        }
-                    }
+        for (Object providerObj : context.getBeans()) {
+            Class providerClass = providerObj.getClass();
+            for (Field field : providerClass.getDeclaredFields()) {
+                Object bean = context.getBean(field.getType());
+                if (bean != null) {
+                    field.setAccessible(true);
+                    field.set(providerObj, bean);
+                    field.setAccessible(false);
                 }
             }
-        } while (failed.size() > 0);
+        }
     }
 }

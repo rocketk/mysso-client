@@ -20,6 +20,8 @@ public class BeansContextFactoryTest {
     public void testCreate() {
         BeansContext context = new BeansContextFactory(ConfigUtil.DEFAULT_BEANS_CONFIG_FILE).createInterfaceProviderContext();
         assertNotNull("context is null", context);
+        // Configuratrion
+
         // Validator
         Validator validator = context.getBean(Validator.class);
         assertNotNull("validator is null", validator);
