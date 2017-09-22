@@ -74,6 +74,7 @@ public class MyssoFilter implements Filter {
         this.filterHandlers.add(logoutFilterHandler);
         ValidateFilterHandler validateFilterHandler = new ValidateFilterHandler();
         validateFilterHandler.setValidator(beansContext.getBean(Validator.class));
+        validateFilterHandler.setSessionRegistry(beansContext.getBean(SessionRegistry.class));
         validateFilterHandler.setCfg(cfg);
         this.filterHandlers.add(validateFilterHandler);
     }

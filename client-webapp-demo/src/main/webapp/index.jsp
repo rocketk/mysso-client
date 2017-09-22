@@ -3,8 +3,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <c:set var="ctx" value="<%=request.getContextPath()%>"/>
-<c:set var="cfg" value="<%=application.getAttribute("cfg")%>"/>
-<c:set var="assertion" value="<%=session.getAttribute(((Configuration)application.getAttribute("cfg")).getAssertionName())%>"/>
+<%
+    final Configuration cfg = (Configuration) application.getAttribute("cfg");
+%>
+<c:set var="cfg" value='<%=cfg%>'/>
+<c:set var="assertion" value="<%=session.getAttribute(cfg.getAssertionName())%>"/>
 
 <html>
 <head>
