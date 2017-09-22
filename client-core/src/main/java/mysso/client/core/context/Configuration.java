@@ -1,5 +1,7 @@
 package mysso.client.core.context;
 
+import mysso.protocol1.Constants;
+
 /**
  * Created by pengyu on 2017/9/4.
  */
@@ -41,6 +43,7 @@ public class Configuration {
 
     public void setAuthenticationUrl(String authenticationUrl) {
         this.authenticationUrl = authenticationUrl;
+        setAuthenticationUrlWithSpid(getAuthenticationUrl() + "?" + Constants.PARAM_SPID + "=" + getSpid());
     }
 
     public String getValidationUrlPrefix() {

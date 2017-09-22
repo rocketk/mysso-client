@@ -12,6 +12,7 @@
     <modules>
         <module>client-core</module>
         <module>client-webapp-demo</module>
+        <module>client-webapp-demo-without-spring</module>
     </modules>
 
     <properties>

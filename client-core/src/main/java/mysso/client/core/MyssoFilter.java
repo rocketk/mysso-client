@@ -1,16 +1,7 @@
 package mysso.client.core;
 
-import mysso.client.core.context.BeansContextFactory;
 import mysso.client.core.context.Configuration;
-import mysso.client.core.context.BeansContext;
 import mysso.client.core.handler.FilterHandler;
-import mysso.client.core.handler.LogoutFilterHandler;
-import mysso.client.core.handler.ValidateFilterHandler;
-import mysso.client.core.session.SessionRegistry;
-import mysso.client.core.util.ConfigUtil;
-import mysso.client.core.validator.Validator;
-import mysso.protocol1.Constants;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,65 +9,30 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by pengyu on 17-8-20.
+ * 此类中的属性依赖需要通过spring来完成注入（也可以手动写代码来注入），如果你的程序不洗碗使用spring，可以使用MyssoAutoWiredFilter来替代此类
+ * Created by pengyu
  */
 public class MyssoFilter implements Filter {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Configuration cfg;
+    protected Configuration cfg;
 
-    private BeansContext beansContext;
+    protected List<FilterHandler> filterHandlers;
 
-    private List<FilterHandler> filterHandlers;
+    public MyssoFilter() {
+    }
+
+    public MyssoFilter(Configuration cfg, List<FilterHandler> filterHandlers) {
+        this.cfg = cfg;
+        this.filterHandlers = filterHandlers;
+    }
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        boolean needLoadConfigurationAndBeansContext = Boolean.valueOf(filterConfig.getInitParameter("needLoadConfigurationAndBeansContext"));
-        if (needLoadConfigurationAndBeansContext) {
-            this.loadBeansContext(filterConfig);
-            this.loadConfiguration(filterConfig);
-            this.loadFilterHandlers();
-        }
         filterConfig.getServletContext().setAttribute("cfg", cfg);
-    }
-
-    private void loadConfiguration(FilterConfig filterConfig) {
-        String configFile = filterConfig.getInitParameter("configFile");
-        log.info("loading configFile from {}", configFile);
-        ConfigUtil configUtil = new ConfigUtil(StringUtils.isEmpty(configFile) ? ConfigUtil.DEFAULT_CONFIG_FILE : configFile);
-        cfg = beansContext.getBean(Configuration.class);
-        cfg.setAssertionName(configUtil.getProperty("assertionName", "_mysso_assertion"));
-        cfg.setAuthenticationUrl(configUtil.getProperty("authenticationUrl"));
-        cfg.setValidationUrlPrefix(removeSlash(configUtil.getProperty("validationUrlPrefix")));
-        cfg.setSpid(configUtil.getProperty("spid"));
-        cfg.setSecret(configUtil.getProperty("secret"));
-        cfg.setBackChannelLogoutUri(configUtil.getProperty("backChannelLogoutUri"));
-        cfg.setFrontChannelLogoutUri(configUtil.getProperty("frontChannelLogoutUri"));
-        cfg.setServerLogoutUrl(configUtil.getProperty("serverLogoutUrl"));
-        cfg.setAuthenticationUrlWithSpid(cfg.getAuthenticationUrl() + "?" + Constants.PARAM_SPID + "=" + cfg.getSpid());
-    }
-
-    private void loadBeansContext(FilterConfig filterConfig) {
-        String configFile4Beans = filterConfig.getInitParameter("configFile4Beans");
-        beansContext = new BeansContextFactory(StringUtils.isEmpty(configFile4Beans) ?
-                ConfigUtil.DEFAULT_BEANS_CONFIG_FILE : configFile4Beans).createInterfaceProviderContext();
-    }
-
-    private void loadFilterHandlers() {
-        this.filterHandlers = new ArrayList();
-        LogoutFilterHandler logoutFilterHandler = new LogoutFilterHandler();
-        logoutFilterHandler.setSessionRegistry(beansContext.getBean(SessionRegistry.class));
-        logoutFilterHandler.setCfg(cfg);
-        this.filterHandlers.add(logoutFilterHandler);
-        ValidateFilterHandler validateFilterHandler = new ValidateFilterHandler();
-        validateFilterHandler.setValidator(beansContext.getBean(Validator.class));
-        validateFilterHandler.setSessionRegistry(beansContext.getBean(SessionRegistry.class));
-        validateFilterHandler.setCfg(cfg);
-        this.filterHandlers.add(validateFilterHandler);
     }
 
     @Override
@@ -101,12 +57,19 @@ public class MyssoFilter implements Filter {
 
     }
 
-    private String removeSlash(String uri) {
-        if (uri != null) {
-            while (uri.endsWith("/")) {
-                uri = uri.substring(0, uri.length() - 1);
-            }
-        }
-        return uri;
+    public Configuration getCfg() {
+        return cfg;
+    }
+
+    public void setCfg(Configuration cfg) {
+        this.cfg = cfg;
+    }
+
+    public List<FilterHandler> getFilterHandlers() {
+        return filterHandlers;
+    }
+
+    public void setFilterHandlers(List<FilterHandler> filterHandlers) {
+        this.filterHandlers = filterHandlers;
     }
 }

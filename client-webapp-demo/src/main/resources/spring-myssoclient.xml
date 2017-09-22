@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:property-placeholder ignore-unresolvable="true" location="classpath:myssoclient.properties" />
+    <!-- filters -->
+    <bean id="myssoFilter" class="mysso.client.core.MyssoFilter"
+          c:cfg-ref="cfg"
+          c:filterHandlers-ref="filterHandlers"/>
+    <bean id="cfg" class="mysso.client.core.context.Configuration"
+          p:assertionName="${assertionName:_mysso_assertion}"
+          p:authenticationUrl="${authenticationUrl}"
+          p:validationUrlPrefix="${validationUrlPrefix}"
+          p:spid="${spid}"
+          p:secret="${secret}"
+          p:backChannelLogoutUri="${backChannelLogoutUri}"
+          p:frontChannelLogoutUri="${frontChannelLogoutUri}"
+          p:serverLogoutUrl="${serverLogoutUrl}"
+    />
+    <util:list id="filterHandlers">
+        <bean id="logoutFilterHandler" class="mysso.client.core.handler.LogoutFilterHandler"
+            p:cfg-ref="cfg"
+            p:sessionRegistry-ref="sessionRegistry"/>
+        <bean id="validateFilterHandler" class="mysso.client.core.handler.ValidateFilterHandler"
+            p:sessionRegistry-ref="sessionRegistry"
+            p:cfg-ref="cfg"
+            p:validator-ref="validator"/>
+    </util:list>
+    <bean id="sessionRegistry" class="mysso.client.core.session.InMemorySessionRegistry"/>
+    <bean id="validator" class="mysso.client.core.validator.HttpValidatorImpl"
+          p:cfg-ref="cfg"
+          p:secretPasscodeGenerator-ref="passcodeGenerator"/>
+    <bean id="passcodeGenerator" class="mysso.client.core.security.GoogleAuthPasscodeGenerator"/>
+</beans>
