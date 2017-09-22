@@ -2,6 +2,7 @@ package mysso.client.core;
 
 import mysso.client.core.context.Configuration;
 import mysso.client.core.handler.FilterHandler;
+import mysso.protocol1.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * 此类中的属性依赖需要通过spring来完成注入（也可以手动写代码来注入），如果你的程序不洗碗使用spring，可以使用MyssoAutoWiredFilter来替代此类
+ * 此类中的属性依赖需要通过spring来完成注入（也可以手动写代码来注入），
+ * 如果你的程序不洗碗使用spring，可以使用MyssoAutoWiredFilter来替代此类
  * Created by pengyu
  */
 public class MyssoFilter implements Filter {
@@ -33,6 +35,7 @@ public class MyssoFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         filterConfig.getServletContext().setAttribute("cfg", cfg);
+        cfg.setAuthenticationUrlWithSpid(cfg.getAuthenticationUrl() + "?" + Constants.PARAM_SPID + "=" + cfg.getSpid());
     }
 
     @Override

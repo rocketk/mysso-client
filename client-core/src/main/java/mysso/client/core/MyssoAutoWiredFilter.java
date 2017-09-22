@@ -51,6 +51,7 @@ public class MyssoAutoWiredFilter extends MyssoFilter {
         cfg.setBackChannelLogoutUri(configUtil.getProperty("backChannelLogoutUri"));
         cfg.setFrontChannelLogoutUri(configUtil.getProperty("frontChannelLogoutUri"));
         cfg.setServerLogoutUrl(configUtil.getProperty("serverLogoutUrl"));
+        cfg.setAuthenticationUrlWithSpid(cfg.getAuthenticationUrl() + "?" + Constants.PARAM_SPID + "=" + cfg.getSpid());
     }
 
     private void loadBeansContext(FilterConfig filterConfig) {
