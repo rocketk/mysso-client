@@ -104,7 +104,7 @@ public class LogoutFilterHandler implements FilterHandler {
                 PageUtil.renderHtml(response, PageUtil.warnPage("前端登出成功",
                         "前端登出成功，但是仍需前往服务端登出",
                         cfg.getServerLogoutUrl(),
-                        "服务端登出"));
+                        "服务端登出", true, 3));
                 return;
             }
         }
@@ -112,7 +112,7 @@ public class LogoutFilterHandler implements FilterHandler {
         PageUtil.renderHtml(response, PageUtil.warnPage("前端登出成功",
                 "前端登出成功，但是仍需前往服务端登出",
                 cfg.getServerLogoutUrl(),
-                "服务端登出"));
+                "服务端登出", true, 3));
     }
 
     public void setCfg(Configuration cfg) {

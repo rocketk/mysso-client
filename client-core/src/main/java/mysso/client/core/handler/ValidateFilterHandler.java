@@ -74,7 +74,8 @@ public class ValidateFilterHandler implements FilterHandler {
     }
 
     private boolean handleAssertionDto(HttpServletRequest request, HttpServletResponse response, AssertionDto assertionDto) {
-        if (assertionDto != null && assertionDto.getCode() == 200) {
+        if (assertionDto != null && (assertionDto.getCode() == Constants.VALID_TICKET
+                || assertionDto.getCode()==Constants.VALID_BUT_EXPIRED)) {
             // 校验成功
             Principal principal = new Principal(assertionDto.getPrincipal().getId(),
                     assertionDto.getPrincipal().getAttributes());
@@ -85,7 +86,17 @@ public class ValidateFilterHandler implements FilterHandler {
             sessionRegistry.putSessionByTokenId(assertion.getToken(), session);
             return true;
         } else if(assertionDto != null) {
-            // 校验失败
+            // 校验失败, 原因可能是所使用的st或tk已过期或者服务端已退出, 销毁当前session
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Object assertionObj = session.getAttribute(cfg.getAssertionName());
+                if (assertionObj != null) {
+                    Assertion assertion = (Assertion) assertionObj;
+                    sessionRegistry.removeSessionByTokenId(assertion.getToken());
+                    session.setAttribute(cfg.getAssertionName(), null);
+                }
+                session.invalidate();
+            }
             PageUtil.renderHtml(response, PageUtil.warnPage(
                     "校验ticket失败", assertionDto.getMessage(), cfg.getAuthenticationUrlWithSpid()));
             return false;
